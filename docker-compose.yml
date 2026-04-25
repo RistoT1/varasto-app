@@ -1,0 +1,95 @@
+services:
+
+  # Tuotantoversio (koko stack yhdessä imagessa)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Kehitysversio - frontend
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend-dev
+    profiles:
+      - development
+
+  # Kehitysversio - backend
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - development
+
+  # Tietokanta (käytössä molemmissa profiileissa)
+  db:
+    image: mariadb:10.6
+    container_name: varasto_db
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./varasto.sql:/docker-entrypoint-initdb.d/varasto.sql:ro
+    ports:
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # phpMyAdmin (käytössä molemmissa profiileissa)
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: varasto_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    ports:
+      - "127.0.0.1:8080:80"
+
+volumes:
+  db_data:

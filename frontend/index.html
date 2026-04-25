@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>frontend</title>
+</head>
+
+<body>
+  <script>
+    window.onerror = function (msg, src, line, col, err) {
+      document.body.style.background = 'white';
+      document.body.innerHTML = '<pre style="color:red;padding:20px;font-size:12px;white-space:pre-wrap">'
+        + 'ERROR: ' + msg + '\n'
+        + 'File: ' + src + '\n'
+        + 'Line: ' + line + '\n\n'
+        + (err ? err.stack : '')
+        + '</pre>';
+    }
+    window.addEventListener('unhandledrejection', function (e) {
+      document.body.style.background = 'white';
+      document.body.innerHTML = '<pre style="color:red;padding:20px;font-size:12px;white-space:pre-wrap">'
+        + 'PROMISE ERROR:\n' + e.reason
+        + '</pre>';
+    });
+  </script>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
